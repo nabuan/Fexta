@@ -1,0 +1,1 @@
+[Fst,stpath,FilterIndex] = uigetfile({'*.*','All Files(*.*)'}, 'provide the stiffness file ')
