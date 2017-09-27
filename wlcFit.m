@@ -1,7 +1,10 @@
 function [FittedForce,FittedExt,df,dx,EWLC,FWLC] = wlcFit(Fext,ext)
+%This function fits the standard WLC model to data
+%ds are parametes from.
+
 ds(1)= 0.3419;
 ds(2)= 0.0900;
-ds(3)=  1.3615e+03;
+ds(3)= 1.3615e+03;
 
 WLC  = @(f) ds(1)*(1- 0.5*(ds(2)./f).^0.5 + (1/ds(3)).*f);
 

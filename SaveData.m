@@ -9,7 +9,7 @@ switch(type)
    case 1
      Extension=1:1:m(1)-1;
      Return=m(1)+1:1:k;  
-     Return=Return'
+     Return=Return';
    case 2
       Extension=1:1:m(1)-1;
       FF_Extension=m(1)+1:1:m(2)-1;

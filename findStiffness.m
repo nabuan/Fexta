@@ -1,17 +1,11 @@
 function stiffness= findStiffness(calib,stiffFile)
-% cdold=pwd;
-% cd(PathName);
 
 n=find(all(stiffFile==0,2));
-
 ext(1,:)=stiffFile((1:n-1),2);
 Fext(1,:)=stiffFile((1:n-1),3); 
 Fext(2,:)=stiffFile((1:n-1),6);
 Fext=calib.*mean(Fext);
-
-
 %plot(ext,Fext,'r.');hold on
-
 maxm=find(Fext==max(Fext));
 minm=find(-Fext==max(-Fext));
 Fext1=Fext(minm:maxm);
@@ -24,12 +18,4 @@ stiffness=P(1);
 XX=ext-Fext./stiffness;
 StiffnessData(1,:)=XX;
 StiffnessData(2,:)=Fext;
-
-
-% % figure(3)
-% str=sprintf('Stiffness=%f',stiffness);
-% % plot(XX,Fext,'b.');
-% title(str)
-
-
 end
