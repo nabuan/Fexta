@@ -1,4 +1,4 @@
-function [calbForce,minplat,maxplat,calib] = calibForce(Force,Ext,midpoint,tolerance) 
+function [calbForce,minplat,maxplat,calib] = calibForce(Force,Ext,midpoint,tolerance)
 B = find(abs(diff(Force)) < tolerance);
 C=find(Force(B)<0.3*max(Force));
 B(C)=[];

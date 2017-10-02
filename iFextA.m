@@ -85,73 +85,77 @@ function Cal_dsDNA_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 %dsDNAstruct=struct([]);
-dsDNA_Px=[];
+dsDNA_Px=[];ind1=[];ind2=[];ind4=[];ind3=[];ind5=[];
 bp=str2num(get(handles.BP, 'string')); 
 [dsr_filenm,dsr_path,dsr_Ind]=uigetfile('*.txt','Chose dsDNA Raw Data File');
 RawDnaDataFile = strcat(dsr_path,dsr_filenm);
 RawStgDat = importdata(RawDnaDataFile);
 
-% [dsa_filenm,dsa_path,dsa_Ind] = uigetfile('*.txt','Chose dsDNA Analysed Data File');
-% AnlDnaDataFile=strcat(dsa_path,dsa_filenm);
 [~,nm,ext]=fileparts(dsr_filenm)
 AnlDnaDataFile=sprintf('%s-analyzed.txt',nm);
 AnlDnaDataFile= strcat(dsr_path,AnlDnaDataFile)
-
 AnlStgDat = importdata(AnlDnaDataFile);
-ImgIndx = RawStgDat(:,9);
 
-% nonZIndx=find(ImgIndx);
-% ImgIndx2=sort(ImgIndx(nonZIndx));
-ind1=[];ind2=[];ind4=[];ind3=[];ind5=[];
 datpath=uigetdir('','Chose dsDNA image directory');
 dsDNA_Px = TrackExtPx( handles.Bead_1,handles.Bead_2,0.8,datpath,handles.Tracker,handles.I_R)
 
-dsDNAstruct= struct('ImgInd1',ImgIndx,'rawStgExt',RawStgDat(:,2),'ImgInd2',dsDNA_Px(:,1),'ImgBead_2',dsDNA_Px(:,3),'ImgExt',dsDNA_Px(:,4),'AnalStr', AnlStgDat(:,2),'AnalStrImInd', AnlStgDat(:,4));
+%%%%%%%%%%%%%%%%%%%% finding pixel to um conversion factor%%%%%%%%%%%
+%%uses the image data of bead on the pipet and the raw data of the stage motion
+imIndStg_raw = RawStgDat(:,9);
+imIndImg=dsDNA_Px(:,1);
 
-ind1=find(ismember(dsDNAstruct.ImgInd1,dsDNAstruct.ImgInd2));
+ind1=find(imIndImg<20000); %indices of Stretch image indices from image analysis
+imIndImg_str =imIndImg(ind1); %Stretch image indices from image analysis
+str_img_pipet=dsDNA_Px(ind1,3); %Image data of pipet motion
+ind2=find(ismember(imIndStg_raw,imIndImg_str));% indices of  stretch raw stage motion that was imaged
+str_rawstg_im= RawStgDat(ind2,2); % Raw stage motion that has an image
 
-nmExt=dsDNAstruct.rawStgExt(ind1);
-pxExt=dsDNAstruct.ImgBead_2;
-ind2=find(dsDNAstruct.ImgInd2<20000);
-ind4=find(dsDNAstruct.ImgInd2>19999 & dsDNAstruct.ImgInd2<30000);
-px2nmCal=mean(diff(nmExt(ind2)))/mean(abs(diff(pxExt(ind2))));
 
-ind1=find(ismember(dsDNAstruct.ImgInd1,dsDNAstruct.ImgInd2));
-ind3=find(ismember(dsDNAstruct.AnalStrImInd,dsDNAstruct.ImgInd2));
-ind5=find(ismember(AnlStgDat(:,8),dsDNAstruct.ImgInd2));
+px2umCal=mean(diff(str_rawstg_im)/mean(abs(diff(str_img_pipet))));
 
-dsExtstg=dsDNAstruct.AnalStr(ind3).*bp./1000;
-dxExtIm=dsDNAstruct.ImgExt(ind2);
+%%%%%%%%%%%%%%%%%%%%% finding the offset of the DNA attachement of the beads%%%%%%%%%%%
+%%uses the image data of absolute distance between beads and the analyzed
+%%DNA stretch extension
+str_stg_ex= AnlStgDat(:,2);  
+rtn_stg_ex= AnlStgDat(:,6);   % Analyzed DNA stretch in um
+str_stg_ex_im=str_stg_ex(ind2); % Analyzed DNA extension stretch that has an image
+str_img_ex=px2umCal.*dsDNA_Px(ind1,4);      % Stretch extension from images in um
+rtn_stg_imInd=AnlStgDat(:,8);
+ind3=find(imIndImg>19999 & imIndImg<30000);
+imIndImg_rtn =imIndImg(ind3);
+ind4 =find(ismember(rtn_stg_imInd,imIndImg_rtn));
 
-fun1= @(p) trapz(((px2nmCal.*dxExtIm-p)-dsExtstg).^2);
+fun1= @(p) trapz(((str_img_ex-p)-str_stg_ex_im.*bp./1000).^2);
 offset=fminsearch(fun1,3);
 
-set(handles.Cal_Text,'string',num2str(px2nmCal));
+set(handles.Cal_Text,'string',num2str(px2umCal));
 set(handles.Offset_Text,'string',num2str(offset));
 
-stgF_str=AnlStgDat(:,3);
-stgF_rtn=AnlStgDat(:,7);
-stgE_rtn=AnlStgDat(:,6);
-imE_str=px2nmCal.*dsDNAstruct.ImgExt(ind2)-offset;
-imE_str=(1000/bp).*imE_str;
-imE_rtn=flipud(px2nmCal.*dsDNAstruct.ImgExt(ind4)-offset);
-imE_rtn=(1000/bp).*imE_rtn;
+str_stg_F=AnlStgDat(:,3);
+rtn_stg_F=AnlStgDat(:,7);
 
+rtn_stg_ex=AnlStgDat(:,6);
+str_img_ex=(str_img_ex-offset).*(1000/bp);
+
+rtn_img_ex=(1000/bp).*flipud(px2umCal.*dsDNA_Px(ind3,4)-offset);
+
+str_img_F=rtn_stg_F(ind2);
+rtn_img_F=str_stg_F(ind4);
 
 axes(handles.MainAxes)
 cla(handles.MainAxes)
 set(gca,'Color',[0.5 0.5 0.5],'XColor',[0.95 0.95 0.95],'YColor',[0.95 0.95 0.95]);
-h(1)=plot(dsDNAstruct.AnalStr,stgF_str,'b.','MarkerSize',15); hold on
-h(3)=plot(stgE_rtn,stgF_rtn,'bo','MarkerSize',5)
+h(1)=plot(str_stg_ex,str_stg_F,'b.','MarkerSize',15); hold on
+h(3)=plot(rtn_stg_ex,rtn_stg_F,'bo','MarkerSize',5)
 
-h(2)=plot(imE_str,stgF_str(ind3),'r.','MarkerSize',15); hold on
-h(4)=plot(imE_rtn,stgF_rtn(ind5),'ro','MarkerSize',5)
+h(2)=plot(str_img_ex,str_img_F,'r.','MarkerSize',15); hold on
+h(4)=plot(rtn_img_ex,rtn_img_F,'ro','MarkerSize',5)
 xlabel('Extension (nm/bp)','Color',[0.95 0.95 0.95])
 ylabel('Force (pN)','Color',[0.95 0.95 0.95])
 set(gca,'Color',[0.5 0.5 0.5],'XColor',[0.95 0.95 0.95],'YColor',[0.95 0.95 0.95]);
 legend(h(1:2),'stage','image','Location','northwest')
 handles.offset=offset;
-handles.calib=px2nmCal;
+handles.calib=px2umCal;
 guidata(hObject, handles);
 
 % --- Executes on button press in Chose_ref_Beads.
@@ -159,7 +163,7 @@ function Chose_ref_Beads_Callback(hObject, eventdata, handles)
 % hObject    handle to Chose_ref_Beads (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+Bead_1=[]; Bead_2=[];I_R=[];I_ref=[];
 [Bead_1, Bead_2,I_R,I_ref]=Chose_Ref_Beads( );
 axes(handles.Bead1)
 cla(handles.MainAxes)
@@ -279,8 +283,14 @@ function Import_stg_str_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 bp=str2num(get(handles.BP, 'string')); 
-drift_str=[];
-drift_rtn=[];
+drift_str=[];drift_rtn=[];
+t_str_stg=[]; t_rtn_stg=[];
+t_str_im=[];t_rtn_im=[];
+str_stg=[]; str_im=[];
+str_F_stg=[];str_F_im=[];
+rtn_stg=[]; rtn_im=[];
+rtn_F_stg=[];rtn_F_im=[];
+ind1=[];ind2=[];
 DataStruct=handles.DataStructs;
 ind1=[];ind2=[];ind3=[];ind3=[];
 [dsa_filenm,dsa_path,dsa_Ind] = uigetfile('*.txt','Chose Analyzed(stage) Stretch&Return Data File');
@@ -288,8 +298,8 @@ AnlDataFile=strcat(dsa_path,dsa_filenm);
 AnlStgDat = importdata(AnlDataFile);
 rtn_imInd=AnlStgDat(:,8);
 str_imInd=AnlStgDat(:,4); 
-ind1=find(ismember(DataStruct.Str_im_ind,str_imInd));
-ind2=find(ismember(DataStruct.Rtn_im_ind,rtn_imInd));
+ind1=find(ismember(str_imInd,DataStruct.Str_im_ind));
+ind2=find(ismember(rtn_imInd,DataStruct.Rtn_im_ind));
 t_str_stg=AnlStgDat(:,1); 
 t_rtn_stg=AnlStgDat(:,5);
 t_str_im=t_str_stg(ind1);
@@ -424,7 +434,7 @@ datfilenm=handles.datfilenm;
 datfilenm=sprintf('%s_imCrctd.txt',nm);
 datfilenm= strcat(datpth,datfilenm);
 
-dlmwrite(datfilenm,AnlStgDat,'delimiter','\t','newline','pc');
+dlmwrite(datfilenm,AnlStgDat,'delimiter','\t','newline','pc','precision',10);
 % hObject    handle to CorrectStrRtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -532,7 +542,7 @@ AnlStgDat(:,2)=ext_stg_crctd;
 [~,nm,ext]=fileparts(datfilenm)
 datfilenm=sprintf('%s_imCrctd.txt',nm);
 datfilenm= strcat(datpth,datfilenm);
-dlmwrite(datfilenm,AnlStgDat,'delimiter','\t','newline','pc');
+dlmwrite(datfilenm,AnlStgDat,'delimiter','\t','newline','pc','precision',10);
 
 % --- Executes on button press in ImprtFFR.
 function ImprtFFR_Callback(hObject, eventdata, handles)
