@@ -13,7 +13,7 @@ function [pos1,pos2]=TrackBead(dirname)
 
 %Algorithm 2
 %1. Perform high-pass fourier filtering on 1D intensity profiles
-%2. Detect peaks within expected 
+%2. Detect peaks within expected
 
 %Parameters:
 updateref=1000;         %Steps after which reference image is recalculated
@@ -48,7 +48,8 @@ IM_reduced=Reduce_Stack(IMstack,redfact,redfact,1,'Mean');
 for f=1:size(IM_reduced,3)
     IM_reduced(:,:,f) = imgaussfilt(IM_reduced(:,:,f),2);
 end
-IM_corr=bsxfun(@minus,IM_reduced,mean(IM_reduced,3));
+indmax=max([50,size(IM_reduced,3)]);
+IM_corr=bsxfun(@minus,IM_reduced,mean(IM_reduced(:,:,1:indmax),3));
 
 %--------------------------------------------------------------------------
 %------------------------------STAGE BEAD----------------------------------
@@ -62,6 +63,8 @@ close(999)
 
 %Re-adjust reference image to find bead
 [bead_midpt_relxy,~,~]=imfindcircles(bead_im,round([0.5*im_pad im_pad]),'ObjectPolarity','dark');
+[~,keep]=min(sum((bead_midpt_relxy-search_pad).^2,2));
+bead_midpt_relxy=bead_midpt_relxy(keep,:);
 bead_midpt_xy=round((bead_midpt_relxy-1)+(bead_midpt_xy-search_pad));
 bead_im=IM_reduced((bead_midpt_xy(2)-im_pad):(bead_midpt_xy(2)+im_pad),(bead_midpt_xy(1)-im_pad):(bead_midpt_xy(1)+im_pad),1);
 
@@ -157,7 +160,7 @@ drawnow;hf=gcf;
 
 keypressed=0;
 while keypressed~=1
-   keypressed=waitforbuttonpress; 
+    keypressed=waitforbuttonpress;
 end
 h=gca;
 IM_currplane=h.Children.CData;
