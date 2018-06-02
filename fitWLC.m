@@ -20,7 +20,8 @@ xt=Dat.xt;
 xd=Dat.xd;
 
 %ind=find(xd < (Fmelt-yoffset)./2 & xd > 9);
-ind=find(xd < (Fmelt-yoffset)./1.5);
+%ind=find(xd < (Fmelt-yoffset)./1.5);
+[ind] = fitSigmoid(xs-xt,xd); % -----> Estimate the sigmoid and choose datapoints to fit.
 
 xs=xs(ind);
 xt=xt(ind);
@@ -41,26 +42,30 @@ argminf = @(varmin) ...
     (Bds./2)*((kb.*T)./((varmin(1).*(xd+yoffset-Fmelt)+Fmelt).*Pds)).^0.5 - ...
     (Bds./Sds).*(varmin(1).*(xd+yoffset-Fmelt) + Fmelt)).^2);
 
+%{
 argminf2 = @(varmin) ...
     trapz(((varmin(1).*(xd+yoffset-Fmelt)+Fmelt)).^2,...
     ((xs-xt+varmin(2))./Nbp - ...
     Bds + ...
     (Bds./2)*((kb.*T)./((varmin(1).*(xd+yoffset-Fmelt)+Fmelt).*Pds)).^0.5 - ...
     (Bds./Sds).*(varmin(1).*(xd+yoffset-Fmelt) + Fmelt)).^2);
+%}
 
-%bestvar=fminsearch(argminf,[0.1,400]);
-bestvar=fminsearch(argminf2,[0.1,500]);
+bestvar=fminsearch(argminf,[0.1,500]);
+%bestvar=fminsearch(argminf2,[0.1,500]);
 
 Fcalibrated=bestvar(1).*(Dat.xd+yoffset-Fmelt)+Fmelt;
 bcalibrated=(Dat.xs-Dat.xt+bestvar(2))./Nbp;
-Ftemp=[0.1:0.1:30];
+Ftemp=(0.1:0.1:30);
 
-h=gobjects(2);
+h=gobjects(3,1);
 figure(207);clf(207);
 h(1)=plot(bcalibrated,Fcalibrated,'.','Color',[0.6 0.6 0.6],'MarkerSize',10);hold on
 h(2)=plot(bds(Ftemp),Ftemp,'-','Color',[0.8 0 0]);
 h(3)=plot(bcalibrated(ind),Fcalibrated(ind),'x','Color',[0 0 0],'MarkerSize',5);hold on
-legend({'Calibrated data','WLC fit','Fitted points'},'Location','southeast');
+legend(h,{'Calibrated data','WLC fit','Fitted points'},'Location','southeast');
+xlabel('Extension, nm/bp')
+ylabel('Force, pN')
 grid on;axis square;drawnow;box on;
 MakePretty(gca)
 

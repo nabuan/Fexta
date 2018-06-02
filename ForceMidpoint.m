@@ -1,10 +1,8 @@
 function F_melt = ForceMidpoint(Na_Conc)
-%This calculation is based on the following studies:
-%Williams_2001: Entropy and Heat Capacity of DNA Melting ...
-%Rouzina_2001: Force-Induced Melting of ...
-%Wenner_2002: Salt Dependence of the Elasticity ...
-
-%Na_Conc input is in mM; interally calculations are in M
+%Salt concentration Na_Conc input is in mM; 
+%Calculations within this function are after conversion to M
+%The hard-coded values are based on the following studies:
+%Williams MC et al. (2001) ,Rouzina I et al. (2001) and Wenner RJ et al. (2002)
 
 Na_Conc=Na_Conc/1000;
 Na_ref = [250,100,53.5,25,10,2.6]./1000;
