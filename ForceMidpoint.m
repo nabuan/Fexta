@@ -1,10 +1,17 @@
-function Fos = ForceMidpoint(SaltConc)
+function F_melt = ForceMidpoint(Na_Conc)
+%This calculation is based on the following studies:
+%Williams_2001: Entropy and Heat Capacity of DNA Melting ...
+%Rouzina_2001: Force-Induced Melting of ...
+%Wenner_2002: Salt Dependence of the Elasticity ...
 
-Na = [250,100,53.5,25,10,2.6]./1000;
-fos= [65.5,62.6,61.0,58.8,55.3,51.5];
+%Na_Conc input is in mM; interally calculations are in M
+
+Na_Conc=Na_Conc/1000;
+Na_ref = [250,100,53.5,25,10,2.6]./1000;
+f_melt_theory= [65.5,62.6,61.0,58.8,55.3,51.5];
 err= [0.8,0.7,0.7,1.2,1.2,1.2];
-FOS = @(p,q) p(1).*log(q)+ p(2);
-RES = @(p,q) sum(((FOS(p,Na)-fos)./err).^2);
-P = fminsearch(RES,[2.5,60]);
-Fos=FOS(P,SaltConc/1000);
+f_melt_fit = @(p,q) p(1).*log(q)+ p(2);
+res = @(p,q) sum(((f_melt_fit(p,Na_ref)-f_melt_theory)./err).^2);
+P = fminsearch(res,[2.5,60]);
+F_melt=f_melt_fit(P,Na_Conc);
 end

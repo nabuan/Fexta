@@ -1,4 +1,4 @@
-function xData=correctStiffness(p,xrData,FrData,bp,STFILE)
+function xData=correctStiffnessold(p,xrData,FrData,bp,STFILE)
 
 xrData = (bp/1000).*xrData;
 

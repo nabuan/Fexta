@@ -21,6 +21,7 @@ im_pad=30;              %Smallest value that can accomodate entire reference bea
 search_pad=45;          %im_pad < search_pad. Smalles value to include bead position in next frame
 redfact=2;              %Factor by which image is reduced. Above parameters should be rescaled automatically in future version.
 isplot=false;
+cthr=0.8;
 %--------------------------------------------------------------------------
 %Load sequence into a stack
 if isempty(dirname)
@@ -186,7 +187,7 @@ vals=bead_im_corrected(bead_im_dist>r_estimated*1.2);
 bead_im_corrected(bead_im_dist>r_estimated*1.2)=vals(randperm(numel(vals)));
 
 %Updating bead_im
-bead_im=bead_im_corrected;
+%bead_im=bead_im_corrected;
 
 
 
@@ -242,7 +243,7 @@ for f=2:size(IM_reduced,3)
     %Portions without complete overlap of ref and srch are set to 0
     msk=true(size(cc));msk(size(ref,1):size(ref,1)+(size(srch)-size(ref,1)),...
         size(ref,2):size(ref,2)+(size(srch)-size(ref,2)))=false;
-    cc(msk)=0;cc(cc<=0.9*nanmax(cc(:)))=0;
+    cc(msk)=0;cc(cc<=0.8*nanmax(cc(:)))=0;
     
     [is,js,vs]=find(cc);
     cc_midpt_relxy=[sum(js.*vs)./sum(vs),sum(is.*vs)./sum(vs)];
