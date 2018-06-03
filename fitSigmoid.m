@@ -1,4 +1,4 @@
-function [fitind] = fitSigmoid(X,Y)
+function [sigfit,fitind] = fitSigmoid(X,Y)
 
 sig=fittype('A./(1+exp(-(x-B)/C))+D');
 
@@ -16,7 +16,7 @@ h2 = plot(X,sigfit(X),'-r');
 h3 = plot(X(fitind),Y(fitind),'o','Color',[0 0.5 0.8],'LineWidth',2);hold on;
 grid on;box on; axis square;
 ylabel('Force, A.U.')
-xlabel('Extension, A.U.')
+xlabel('Extension, nm')
 legend([h1,h2,h3],'Data','Sigmoid Fit','To fit with WLC')
 MakePretty(gca);
 end

@@ -6,7 +6,7 @@ T=298;              %in K
 Pds=45;             %in nm
 Bds=0.34;           %in nm/basePair
 Sds=1361;           %in pN
-Nbp=8100;           %User input - move this to parameter file later
+Nbp=48500;          %User input - move this to parameter file later
 %--------------------------------------------------------------------------
 
 yoffset=calib.yoff;
@@ -15,13 +15,23 @@ yoffset=calib.yoff;
 Dat.xs=Dat.xs*10^3;
 Dat.xt=Dat.xt*10^3;
 
+%Normalizing data using sigmoid fit parameters. Fmelt has to be changed as
+%well, because we want to hold the y-position at the plateau at known
+%value.
+[f,ind] = fitSigmoid(Dat.xs-Dat.xt,Dat.xd); % -----> Estimate the sigmoid and choose datapoints to fit.
+temp = (Dat.xd+yoffset-Fmelt)./f.A;
+rough_y_scale = Fmelt./abs(min(temp(ind)));
+
+%The following normalizes Dat.xd such that minimum is at 0 and the plateau
+%is at Fmelt:
+Dat.xd = ((Dat.xd+yoffset-Fmelt)./f.A)*rough_y_scale + Fmelt;
+yoffset = 0;
+
+Dat.xs=Dat.xs-f.B+0.35*Nbp;
+
 xs=Dat.xs;
 xt=Dat.xt;
 xd=Dat.xd;
-
-%ind=find(xd < (Fmelt-yoffset)./2 & xd > 9);
-%ind=find(xd < (Fmelt-yoffset)./1.5);
-[ind] = fitSigmoid(xs-xt,xd); % -----> Estimate the sigmoid and choose datapoints to fit.
 
 xs=xs(ind);
 xt=xt(ind);
@@ -32,15 +42,15 @@ bds = @(F) Bds*(1-(1/2).* ...
     ((kb.*T)./(F.*Pds)).^0.5 + ...
     (F./Sds));
 
-%figure,plot(X,Y)
-%Ftemp = 0:0.1:60;
-%figure,plot(bds(Ftemp),Ftemp)
-% varmin = [c, xoffset]
+% argminf = @(varmin) ...
+%     sum(...
+%     ((xs-xt)./Nbp + varmin(2) -  ...
+%     Bds + ...
+%     (Bds./2)*((kb.*T)./((varmin(1).*(xd+yoffset-Fmelt)+Fmelt).*Pds)).^0.5 - ...
+%     (Bds./Sds).*(varmin(1).*(xd+yoffset-Fmelt) + Fmelt)).^2);
+
 argminf = @(varmin) ...
-    sum(((xs-xt+varmin(2))./Nbp - ...
-    Bds + ...
-    (Bds./2)*((kb.*T)./((varmin(1).*(xd+yoffset-Fmelt)+Fmelt).*Pds)).^0.5 - ...
-    (Bds./Sds).*(varmin(1).*(xd+yoffset-Fmelt) + Fmelt)).^2);
+    sum(((xs-xt)./Nbp + varmin(2) - bds(varmin(1).*(xd+yoffset-Fmelt)+Fmelt)).^2);
 
 %{
 argminf2 = @(varmin) ...
@@ -50,12 +60,13 @@ argminf2 = @(varmin) ...
     (Bds./2)*((kb.*T)./((varmin(1).*(xd+yoffset-Fmelt)+Fmelt).*Pds)).^0.5 - ...
     (Bds./Sds).*(varmin(1).*(xd+yoffset-Fmelt) + Fmelt)).^2);
 %}
+    
+opt = optimset('TolFun',10^-10,'TolX',10^-10);
+[best_var,current_fval,exitflag,output]=fminsearch(argminf,[0.9,0],opt);
+disp(best_var)
 
-bestvar=fminsearch(argminf,[0.1,500]);
-%bestvar=fminsearch(argminf2,[0.1,500]);
-
-Fcalibrated=bestvar(1).*(Dat.xd+yoffset-Fmelt)+Fmelt;
-bcalibrated=(Dat.xs-Dat.xt+bestvar(2))./Nbp;
+Fcalibrated=best_var(1).*(Dat.xd+yoffset-Fmelt)+Fmelt;
+bcalibrated=(Dat.xs-Dat.xt)./Nbp+best_var(2);
 Ftemp=(0.1:0.1:30);
 
 h=gobjects(3,1);

@@ -2,11 +2,13 @@
 
 [~,val]=system('hostname');
 if contains(val,'Fruity')
-    stiffnesspth='/Users/Fruity/Dropbox/Lab/Other Projects/Fexta-DNA analysis/FEXTA/dat/raw/Stiffness.txt';
-    rawpth='/Users/Fruity/Dropbox/Lab/Other Projects/Fexta-DNA analysis/FEXTA/dat/raw/DNA.txt';
+    %stiffnesspth='/Users/Fruity/Dropbox/Lab/Other Projects/Fexta-DNA analysis/FEXTA/dat/raw/Stiffness.txt';
+    %rawpth='/Users/Fruity/Dropbox/Lab/Other Projects/Fexta-DNA analysis/FEXTA/dat/raw/DNA.txt';
+    stiffnesspth='/Users/Fruity/Dropbox/Lab/Other Projects/Fexta-DNA analysis/FEXTA/dat/raw/stiffness,09,11,2017_5um.txt';
+    rawpth='/Users/Fruity/Dropbox/Lab/Other Projects/Fexta-DNA analysis/FEXTA/dat/raw/dsDNA_48.5kbp_5umbead.txt';
 else
-    stiffnesspth='C:\Users\Naba\Dropbox\Naba&Gala\FEXTA\dat\raw\Stiffness.txt';
-    rawpth='C:\Users\Naba\Dropbox\Naba&Gala\FEXTA\dat\raw\DNA.txt';
+    stiffnesspth='C:\Users\Nabuan\Dropbox\Naba&Gala\FEXTA\dat\raw\stiffness,09,11,2017_5um.txt';
+    rawpth='C:\Users\Nabuan\Dropbox\Naba&Gala\FEXTA\dat\raw\dsDNA_48.5kbp_5umbead.txt';
 end
 
 vers=1;%default
